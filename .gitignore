@@ -1,0 +1,12 @@
+# QoderWork internal
+.workbuddy/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# OS
+.DS_Store
+Thumbs.db

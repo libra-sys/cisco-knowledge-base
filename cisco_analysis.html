@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>思科知识点可视化分析 — 超绝牛逼网络笔记</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: #0f1923; color: #e0e0e0; min-height: 100vh; }
+.hero { background: linear-gradient(135deg, #0f1923 0%, #162230 40%, #1b2a3a 100%); padding: 48px 32px; text-align: center; border-bottom: 1px solid #2a3a4a; }
+.hero h1 { font-size: 2.5rem; background: linear-gradient(135deg, #4CC9F0, #4361EE, #7209B7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; }
+.hero p { color: #8899aa; font-size: 1.1rem; }
+.hero .source { margin-top: 8px; font-size: 0.85rem; color: #667788; }
+
+.stats-bar { display: flex; justify-content: center; gap: 24px; padding: 24px 32px; flex-wrap: wrap; }
+.stat-card { background: #1a2a3a; border: 1px solid #2a3a4a; border-radius: 12px; padding: 20px 32px; text-align: center; min-width: 140px; transition: transform 0.2s; }
+.stat-card:hover { transform: translateY(-2px); border-color: #4361EE; }
+.stat-card .num { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, #4CC9F0, #4361EE); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.stat-card .label { font-size: 0.85rem; color: #8899aa; margin-top: 4px; }
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px 32px; max-width: 1400px; margin: 0 auto; }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+.chart-container { background: #1a2a3a; border: 1px solid #2a3a4a; border-radius: 12px; padding: 20px; }
+.chart-container h3 { color: #ccd6e0; font-size: 1rem; margin-bottom: 16px; }
+.chart-container.full { grid-column: 1 / -1; }
+canvas { max-height: 350px; }
+
+.cmd-section { padding: 20px 32px; max-width: 1400px; margin: 0 auto; }
+.cmd-section h3 { color: #ccd6e0; font-size: 1.1rem; margin-bottom: 16px; }
+.cmd-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.cmd-tag { background: #1a2a3a; border: 1px solid #3a4a5a; border-radius: 6px; padding: 6px 14px; font-family: "Cascadia Code", "Fira Code", "Consolas", monospace; font-size: 0.8rem; color: #4CC9F0; transition: all 0.2s; }
+.cmd-tag:hover { background: #243044; border-color: #4361EE; }
+
+.topics { padding: 20px 32px; max-width: 1400px; margin: 0 auto; }
+.topics h3 { color: #ccd6e0; font-size: 1.1rem; margin-bottom: 16px; }
+.topics-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px; }
+.topic-item { background: #1a2a3a; border: 1px solid #2a3a4a; border-radius: 8px; padding: 10px 16px; font-size: 0.85rem; color: #99aabb; transition: all 0.2s; }
+.topic-item:hover { border-color: #4361EE; color: #ccd6e0; }
+.topic-item::before { content: "▸ "; color: #4361EE; }
+
+.summary { padding: 20px 32px 40px; max-width: 1400px; margin: 0 auto; }
+.summary h3 { color: #ccd6e0; font-size: 1.1rem; margin-bottom: 16px; }
+.summary-text { background: #1a2a3a; border: 1px solid #2a3a4a; border-radius: 12px; padding: 20px; line-height: 1.8; color: #99aabb; }
+
+footer { text-align: center; padding: 24px; color: #556677; font-size: 0.8rem; border-top: 1px solid #1a2a3a; }
+strong { color: #4CC9F0; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>思科/Cisco 知识点可视化分析</h1>
+  <p>数据来源：超绝牛逼网络笔记 (超绝牛逼网络笔记.docx)</p>
+  <p class="source">分析日期：2026年5月28日 &nbsp;|&nbsp; 文档规模：55,379 字符 / 3,649 行</p>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-card"><div class="num">10</div><div class="label">知识分类</div></div>
+  <div class="stat-card"><div class="num">27</div><div class="label">网络协议</div></div>
+  <div class="stat-card"><div class="num">43</div><div class="label">Cisco IOS 命令</div></div>
+  <div class="stat-card"><div class="num">123</div><div class="label">知识主题</div></div>
+  <div class="stat-card"><div class="num">3,649</div><div class="label">文档总行数</div></div>
+</div>
+
+<div class="grid">
+  <div class="chart-container">
+    <h3>📊 知识点分类分布（按关键词提及频率）</h3>
+    <canvas id="catBar"></canvas>
+  </div>
+  <div class="chart-container">
+    <h3>🎯 热点关键词 Top 20</h3>
+    <canvas id="kwBar"></canvas>
+  </div>
+  <div class="chart-container">
+    <h3>📡 网络协议提及频次 Top 15</h3>
+    <canvas id="protoBar"></canvas>
+  </div>
+  <div class="chart-container">
+    <h3>🏗️ 协议层级分布</h3>
+    <canvas id="layerPie"></canvas>
+  </div>
+</div>
+
+<div class="cmd-section">
+  <h3>⌨️ 思科 IOS 命令集（文档中出现的 43 条典型命令）</h3>
+  <div class="cmd-grid">
+    <span class="cmd-tag">access</span>
+    <span class="cmd-tag">configure terminal</span>
+    <span class="cmd-tag">copy running-config startup-config</span>
+    <span class="cmd-tag">deny</span>
+    <span class="cmd-tag">enable</span>
+    <span class="cmd-tag">fa</span>
+    <span class="cmd-tag">gi</span>
+    <span class="cmd-tag">hostname</span>
+    <span class="cmd-tag">interfaces</span>
+    <span class="cmd-tag">ip</span>
+    <span class="cmd-tag">ip address</span>
+    <span class="cmd-tag">ip route</span>
+    <span class="cmd-tag">loopback</span>
+    <span class="cmd-tag">mode</span>
+    <span class="cmd-tag">name engineering</span>
+    <span class="cmd-tag">name sales</span>
+    <span class="cmd-tag">name service</span>
+    <span class="cmd-tag">network 10.0.0.0</span>
+    <span class="cmd-tag">network 10.1.1.0</span>
+    <span class="cmd-tag">network 12.0.0.0</span>
+    <span class="cmd-tag">network 172.16.0.0</span>
+    <span class="cmd-tag">network 192.168.1.0</span>
+    <span class="cmd-tag">network 192.168.10.0</span>
+    <span class="cmd-tag">network 192.168.100.0</span>
+    <span class="cmd-tag">network 192.168.20.0</span>
+    <span class="cmd-tag">network 2.2.2.2</span>
+    <span class="cmd-tag">no shutdown</span>
+    <span class="cmd-tag">ospf</span>
+    <span class="cmd-tag">permit</span>
+    <span class="cmd-tag">redistribute</span>
+    <span class="cmd-tag">rip</span>
+    <span class="cmd-tag">running-config</span>
+    <span class="cmd-tag">serial</span>
+    <span class="cmd-tag">spanning-tree</span>
+    <span class="cmd-tag">trunk</span>
+    <span class="cmd-tag">vlan</span>
+    <span class="cmd-tag">vlan 1</span>
+    <span class="cmd-tag">vlan 10</span>
+    <span class="cmd-tag">vlan 10192</span>
+    <span class="cmd-tag">vlan 20</span>
+    <span class="cmd-tag">vlan 20192</span>
+    <span class="cmd-tag">vlan 30</span>
+    <span class="cmd-tag">vlan 30192</span>
+  </div>
+</div>
+
+<div class="topics">
+  <h3>📋 文档主要知识主题</h3>
+  <div class="topics-list">
+    <div class="topic-item">计算机网络是什么：</div>
+    <div class="topic-item">计算机网络的功能有什么：</div>
+    <div class="topic-item">计算机网络怎么分类：</div>
+    <div class="topic-item">计算机网络协议是什么：</div>
+    <div class="topic-item">现在用的计算机网络协议 与OSI开放互联模型七层协议有什么区别：</div>
+    <div class="topic-item">每一层对应的协议有哪些：</div>
+    <div class="topic-item">常用网络命令（ping,ipconfig）</div>
+    <div class="topic-item">t:ping 一个主机时系统不停地运行ping这个命令，直到按下Ctrl+C组合键。</div>
+    <div class="topic-item">a:解析主机的NetBIOS主机名，一般是在运用ping命令后的第一行就显示出来</div>
+    <div class="topic-item">n count:定义用来测试所发出的测试包（ECHO)的个数，默认值为4。通过这个命令可以 自己定义发送的测试包个...</div>
+    <div class="topic-item">过程：用户输入文本（如 "你好"）。应用层将数据交给表示层。</div>
+    <div class="topic-item">动作：数据交给应用程序。</div>
+    <div class="topic-item">原理：基于OSI第一层物理层，通过调整模块或端口连接的网段实现负载平衡</div>
+    <div class="topic-item">应用：早期应用于插槽式集线器的端口分配</div>
+    <div class="topic-item">原理：通过对传统传输媒介进行微分段，提供并行传送机制，减小冲突域，提高带宽</div>
+    <div class="topic-item">特点：应用最广的局域网交换技术，支持高级控制功能</div>
+    <div class="topic-item">原理：采用固定长度53字节的信元进行交换，易于硬件实现</div>
+    <div class="topic-item">典型代表：ATM(异步传输模式)技术</div>
+    <div class="topic-item">数字交换阶段：数字技术应用于交换系统</div>
+    <div class="topic-item">宽带交换阶段：ATM和IP为核心的宽带分组交换技术发展</div>
+    <div class="topic-item">光交换阶段：光交换技术突破电子速率瓶颈，实现太空数据传输"零误码"</div>
+    <div class="topic-item">应用：连接企业内部服务器、工作站、打印机等终端设备</div>
+    <div class="topic-item">特点：提供VLAN划分、访问控制列表等高级功能，提高网络安全性</div>
+    <div class="topic-item">设备：二层/三层交换机，支持端口聚合、生成树协议等</div>
+    <div class="topic-item">应用：连接大量服务器和存储设备，处理海量数据传输</div>
+    <div class="topic-item">应用：连接工厂、车间的传感器、控制器等智能设备</div>
+    <div class="topic-item">应用：连接监控摄像头、存储设备和显示终端</div>
+    <div class="topic-item">特点：需要带宽计算、PoE供电、组播功能</div>
+    <div class="topic-item">配置：千兆PoE交换机，总PoE功率需大于所有摄像头功率之和</div>
+    <div class="topic-item">应用：机场、商场等场所的无线网络覆盖</div>
+  </div>
+</div>
+
+<div class="summary">
+  <h3>📝 分析总结</h3>
+  <div class="summary-text">
+    <p>本笔记覆盖了<strong>计算机网络核心知识</strong>的多个层次，从<strong>OSI 七层模型</strong>到<strong>TCP/IP 协议栈</strong>，从<strong>以太网底层原理</strong>到<strong>应用层协议</strong>。</p>
+    <br>
+    <p><strong>重点领域：</strong>交换技术与 VLAN 配置、路由协议（OSPF/RIP）、Cisco IOS 命令行操作、访问控制列表（ACL）、IP 地址规划与子网划分。</p>
+    <br>
+    <p>文档中包含<strong>大量实战配置示例</strong>，包括跨交换机 VLAN 划分、RIP/OSPF 重分布、边界路由器配置等，实战性极强。</p>
+    <br>
+    <p>按 <strong>Cisco CCNA/CCNP 认证</strong> 知识体系来看，本笔记覆盖了：</p>
+    <ul style="margin-left: 20px; margin-top: 8px;">
+      <li>Network Fundamentals（网络基础）✅</li>
+      <li>Network Access（网络接入/VLAN/Trunk）✅</li>
+      <li>IP Connectivity（路由协议）✅</li>
+      <li>IP Services（DHCP/DNS/NAT）✅</li>
+      <li>Security Fundamentals（ACL/安全基础）✅</li>
+      <li>Automation & Programmability 部分覆盖</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  思科知识点可视化分析 &copy; 2026 | 基于"超绝牛逼网络笔记"文档自动生成
+</footer>
+
+<script>
+// 知识点分类
+new Chart(document.getElementById('catBar'), {
+  type: 'bar',
+  data: {
+    labels: ["\u8def\u7531\u534f\u8bae", "\u4ea4\u6362\u6280\u672f", "IP \u5730\u5740 & \u5b50\u7f51", "\u4ee5\u592a\u7f51 & \u5c40\u57df\u7f51", "Cisco IOS \u547d\u4ee4", "\u5e94\u7528\u5c42\u534f\u8bae", "\u4f20\u8f93\u5c42\u534f\u8bae", "\u8bbf\u95ee\u63a7\u5236 & \u5b89\u5168", "OSI & TCP/IP \u6a21\u578b", "\u7f51\u7edc\u547d\u4ee4 & \u8bca\u65ad"],
+    datasets: [{
+      label: '提及次数',
+      data: [605, 499, 433, 337, 267, 180, 174, 163, 145, 45],
+      backgroundColor: ["#4361EE", "#3A0CA3", "#7209B7", "#F72585", "#4CC9F0", "#4895EF", "#560BAD", "#B5179E", "#3F37C9", "#4895EF"],
+      borderRadius: 4,
+      borderWidth: 0
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#8899aa' }, grid: { color: '#1a2a3a' } },
+      y: { ticks: { color: '#ccd6e0', font: { size: 11 } }, grid: { color: '#1a2a3a' } }
+    }
+  }
+});
+
+// 关键词
+new Chart(document.getElementById('kwBar'), {
+  type: 'bar',
+  data: {
+    labels: ["\u914d\u7f6e", "\u7f51\u7edc", "\u8def\u7531", "\u6570\u636e", "\u5730\u5740", "VLAN", "\u7aef\u53e3", "\u4ea4\u6362\u673a", "\u63a5\u53e3", "\u534f\u8bae", "\u8def\u7531\u5668", "DHCP", "\u4f20\u8f93", "\u8fde\u63a5", "OSPF", "ACL", "\u5e7f\u64ad", "\u901a\u4fe1", "\u547d\u4ee4", "RIP"],
+    datasets: [{
+      label: '出现次数',
+      data: [205, 195, 166, 146, 121, 114, 112, 96, 83, 79, 77, 76, 72, 68, 67, 65, 51, 44, 39, 34],
+      backgroundColor: '#4361EE',
+      borderRadius: 4,
+      borderWidth: 0
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#8899aa' }, grid: { color: '#1a2a3a' } },
+      y: { ticks: { color: '#ccd6e0', font: { size: 11 } }, grid: { color: '#1a2a3a' } }
+    }
+  }
+});
+
+// 协议
+new Chart(document.getElementById('protoBar'), {
+  type: 'bar',
+  data: {
+    labels: ["IP", "VLAN", "DHCP", "OSPF", "RIP", "UDP", "NAT", "TCP", "DNS", "FTP", "POP3", "SMTP", "HTTP", "TFTP", "CSMA/CD"],
+    datasets: [{
+      label: '提及次数',
+      data: [178, 114, 76, 67, 34, 19, 15, 14, 12, 11, 10, 9, 8, 7, 6],
+      backgroundColor: '#7209B7',
+      borderRadius: 4,
+      borderWidth: 0
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#8899aa' }, grid: { color: '#1a2a3a' } },
+      y: { ticks: { color: '#ccd6e0', font: { size: 11 } }, grid: { color: '#1a2a3a' } }
+    }
+  }
+});
+
+// 协议层级分布
+new Chart(document.getElementById('layerPie'), {
+  type: 'doughnut',
+  data: {
+    labels: ["\u4f20\u8f93\u5c42", "\u7f51\u7edc\u5c42", "\u8def\u7531\u534f\u8bae", "\u5e94\u7528\u5c42", "\u6570\u636e\u94fe\u8def\u5c42"],
+    datasets: [{
+      data: [33, 201, 103, 146, 124],
+      backgroundColor: ['#4361EE', '#7209B7', '#F72585', '#4CC9F0', '#4895EF', '#3A0CA3'],
+      borderWidth: 0
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'right', labels: { color: '#ccd6e0', font: { size: 11 }, padding: 16 } }
+    }
+  }
+});
+</script>
+</body>
+</html>
