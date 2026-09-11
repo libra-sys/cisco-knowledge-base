@@ -2,8 +2,8 @@ import zipfile
 import xml.etree.ElementTree as ET
 import sys
 
-docx_path = r"C:\Users\吴海睿\Downloads\超绝牛逼网络笔记.docx"
-output_path = r"E:\ciscotop\network_notes.md"
+docx_path = "network_notes.docx"  # 输入 .docx 放在脚本同目录，或改为实际路径
+output_path = "network_notes.md"  # 输出放脚本同目录
 
 W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 W14 = 'http://schemas.microsoft.com/office/word/2010/wordml'
